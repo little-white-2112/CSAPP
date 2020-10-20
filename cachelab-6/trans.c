@@ -22,6 +22,106 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N])
 {
+    if(M == 32)
+	{
+		int i, j, k, v1, v2, v3, v4, v5, v6, v7, v8;
+		for (i = 0; i < 32; i += 8)
+			for(j = 0; j < 32; j += 8)
+				for(k = i; k < (i + 8); ++k)
+				{
+					v1 = A[k][j];
+					v2 = A[k][j+1];
+					v3 = A[k][j+2];
+					v4 = A[k][j+3];
+					v5 = A[k][j+4];
+					v6 = A[k][j+5];
+					v7 = A[k][j+6];			
+					v8 = A[k][j+7];
+					B[j][k] = v1;
+					B[j+1][k] = v2;
+					B[j+2][k] = v3;
+					B[j+3][k] = v4;
+					B[j+4][k] = v5;
+					B[j+5][k] = v6;
+					B[j+6][k] = v7;
+					B[j+7][k] = v8;
+				}
+	}
+    else if (M == 64)
+	{
+		int i, j, x, y;
+		int x1, x2, x3, x4, x5, x6, x7, x8;
+		for (i = 0; i < N; i += 8)
+			for (j = 0; j < M; j += 8)
+			{
+				for (x = i; x < i + 4; ++x)
+				{
+					x1 = A[x][j]; x2 = A[x][j+1]; x3 = A[x][j+2]; x4 = A[x][j+3];
+					x5 = A[x][j+4]; x6 = A[x][j+5]; x7 = A[x][j+6]; x8 = A[x][j+7];
+					
+					B[j][x] = x1; B[j+1][x] = x2; B[j+2][x] = x3; B[j+3][x] = x4;
+					B[j][x+4] = x5; B[j+1][x+4] = x6; B[j+2][x+4] = x7; B[j+3][x+4] = x8;
+				}
+				for (y = j; y < j + 4; ++y)
+				{
+					x1 = A[i+4][y]; x2 = A[i+5][y]; x3 = A[i+6][y]; x4 = A[i+7][y];
+					x5 = B[y][i+4]; x6 = B[y][i+5]; x7 = B[y][i+6]; x8 = B[y][i+7];
+					
+					B[y][i+4] = x1; B[y][i+5] = x2; B[y][i+6] = x3; B[y][i+7] = x4;
+					B[y+4][i] = x5; B[y+4][i+1] = x6; B[y+4][i+2] = x7; B[y+4][i+3] = x8;
+				}
+				for (x = i + 4; x < i + 8; ++x)
+				{
+					x1 = A[x][j+4]; x2 = A[x][j+5]; x3 = A[x][j+6]; x4 = A[x][j+7];
+					B[j+4][x] = x1; B[j+5][x] = x2; B[j+6][x] = x3; B[j+7][x] = x4;
+				}
+			}
+	}
+    else if(M == 61)
+	{
+		int i, j, v1, v2, v3, v4, v5, v6, v7, v8;
+		int n = N / 8 * 8;
+		int m = M / 8 * 8;
+		for (j = 0; j < m; j += 8)
+			for (i = 0; i < n; ++i)
+			{
+				v1 = A[i][j];
+				v2 = A[i][j+1];
+				v3 = A[i][j+2];
+				v4 = A[i][j+3];
+				v5 = A[i][j+4];
+				v6 = A[i][j+5];
+				v7 = A[i][j+6];
+				v8 = A[i][j+7];
+				
+				B[j][i] = v1;
+				B[j+1][i] = v2;
+				B[j+2][i] = v3;
+				B[j+3][i] = v4;
+				B[j+4][i] = v5;
+				B[j+5][i] = v6;
+				B[j+6][i] = v7;
+				B[j+7][i] = v8;
+			}
+		for (i = n; i < N; ++i)
+			for (j = m; j < M; ++j)
+			{
+				v1 = A[i][j];
+				B[j][i] = v1;
+			}
+		for (i = 0; i < N; ++i)
+			for (j = m; j < M; ++j)
+			{
+				v1 = A[i][j];
+				B[j][i] = v1;
+			}
+		for (i = n; i < N; ++i)
+			for (j = 0; j < M; ++j)
+			{
+				v1 = A[i][j];
+				B[j][i] = v1;
+			}
+	}
 }
 
 /* 
